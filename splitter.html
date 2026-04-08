@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Découpeur MP3 GitHub Pages</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09111f;
+      --panel: rgba(13, 20, 37, 0.82);
+      --panel-2: rgba(255,255,255,0.05);
+      --line: rgba(255,255,255,0.12);
+      --text: #edf4ff;
+      --muted: #a5b4cf;
+      --primary: #5eead4;
+      --primary-2: #60a5fa;
+      --danger: #fda4af;
+      --radius-xl: 28px;
+      --radius-lg: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(96,165,250,.22), transparent 28%),
+        radial-gradient(circle at top right, rgba(94,234,212,.14), transparent 24%),
+        linear-gradient(160deg, #020617 0%, #0b1220 100%);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .app {
+      width: min(1020px, 100%);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      backdrop-filter: blur(18px);
+      box-shadow: 0 30px 80px rgba(0,0,0,.35);
+    }
+    .hero { padding: 38px; border-bottom: 1px solid var(--line); }
+    .badge {
+      display: inline-flex; gap: 8px; align-items: center;
+      padding: 8px 12px; border-radius: 999px;
+      background: rgba(94,234,212,.12); color: var(--primary);
+      border: 1px solid rgba(94,234,212,.24); font-size: 13px; font-weight: 700;
+      margin-bottom: 16px;
+    }
+    h1 { margin: 0; font-size: clamp(2rem, 5vw, 3.8rem); line-height: 1; letter-spacing: -.04em; max-width: 12ch; }
+    .lead { margin-top: 16px; color: var(--muted); line-height: 1.7; max-width: 68ch; }
+    .content { padding: 28px; display: grid; grid-template-columns: 1.2fr .8fr; gap: 22px; }
+    .panel {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+    }
+    .panel h2 { margin: 0 0 14px; font-size: 1.05rem; }
+    .dropzone {
+      min-height: 250px; display: grid; place-items: center; text-align: center;
+      border: 1.5px dashed rgba(96,165,250,.42); border-radius: 22px;
+      background: linear-gradient(180deg, rgba(96,165,250,.08), rgba(94,234,212,.04));
+      padding: 22px; transition: .2s ease;
+    }
+    .dropzone.dragover { transform: translateY(-2px) scale(1.01); border-color: rgba(94,234,212,.82); }
+    .icon {
+      width: 74px; height: 74px; margin: 0 auto 16px; border-radius: 20px;
+      display: grid; place-items: center; background: rgba(96,165,250,.15); border: 1px solid rgba(255,255,255,.12);
+    }
+    .dropzone strong { display: block; font-size: 1.1rem; margin-bottom: 8px; }
+    .dropzone p { margin: 0; color: var(--muted); line-height: 1.6; }
+    .file-input { display: none; }
+    button {
+      border: none; cursor: pointer; font: inherit; font-weight: 700; min-height: 48px;
+      border-radius: 14px; padding: 14px 18px; transition: .18s ease;
+    }
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+    .primary { background: linear-gradient(135deg, var(--primary), #86efac); color: #06211e; }
+    .ghost { background: rgba(255,255,255,.05); color: var(--text); border: 1px solid var(--line); }
+    .stack { display: grid; gap: 14px; }
+    .field label { display: block; margin-bottom: 8px; color: var(--muted); font-size: .94rem; }
+    .field input {
+      width: 100%; min-height: 48px; border-radius: 14px; border: 1px solid var(--line);
+      background: rgba(255,255,255,.04); color: var(--text); padding: 14px; font: inherit;
+    }
+    .status {
+      min-height: 72px; display: flex; align-items: center; padding: 15px 16px;
+      border-radius: 16px; background: rgba(255,255,255,.04); border: 1px solid var(--line);
+      color: var(--muted); line-height: 1.6; white-space: pre-line;
+    }
+    .status.error { color: #ffd8de; border-color: rgba(253,164,175,.3); background: rgba(253,164,175,.08); }
+    .info {
+      padding: 14px 16px; border-radius: 16px; background: rgba(96,165,250,.08);
+      border: 1px solid rgba(96,165,250,.22); color: #dbeafe; line-height: 1.6; font-size: .94rem;
+    }
+    .progress { height: 10px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,.06); border: 1px solid var(--line); }
+    .progress > span { display: block; width: 0%; height: 100%; background: linear-gradient(90deg, var(--primary-2), var(--primary)); transition: width .2s ease; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .results { display: grid; gap: 12px; max-height: 380px; overflow: auto; }
+    .result {
+      display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+      padding: 14px; border-radius: 16px; border: 1px solid var(--line); background: rgba(255,255,255,.04);
+    }
+    .small { font-size: .9rem; color: var(--muted); }
+    .meta {
+      display: none; margin-top: 16px; padding: 14px; border-radius: 14px;
+      background: rgba(255,255,255,.04); border: 1px solid var(--line); color: var(--muted);
+    }
+    code { background: rgba(255,255,255,.06); padding: 2px 6px; border-radius: 8px; }
+    @media (max-width: 860px) { .content { grid-template-columns: 1fr; } .hero { padding: 28px; } h1 { max-width: 100%; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="hero">
+      <div class="badge">● Version optimisée pour GitHub Pages</div>
+      <h1>Découpe ton MP3 rapidement dans le navigateur</h1>
+      <p class="lead">Cette version est prévue pour fonctionner avec les fichiers FFmpeg placés sur le même domaine que la page. C’est la bonne approche pour éviter l’erreur de worker bloqué.</p>
+    </section>
+
+    <section class="content">
+      <section class="panel">
+        <h2>Choix du fichier</h2>
+        <div id="dropzone" class="dropzone">
+          <div>
+            <div class="icon">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                <path d="M14 3v8.5a3.5 3.5 0 1 1-2-3.15V6l8-2v7.5a3.5 3.5 0 1 1-2-3.15V2l-4 1Z"/>
+              </svg>
+            </div>
+            <strong>Glisse ton MP3 ici</strong>
+            <p>ou sélectionne-le avec le bouton ci-dessous.</p>
+            <div style="margin-top:18px;">
+              <button id="chooseBtn" type="button" class="primary">Choisir un MP3</button>
+            </div>
+            <input id="fileInput" class="file-input" type="file" accept="audio/mpeg,.mp3" />
+          </div>
+        </div>
+        <div id="fileMeta" class="meta"></div>
+      </section>
+
+      <section class="panel stack">
+        <h2>Paramètres</h2>
+        <div class="field">
+          <label for="segmentMinutes">Durée d’une partie (minutes)</label>
+          <input id="segmentMinutes" type="number" min="1" value="10" />
+        </div>
+        <div class="progress"><span id="progressBar"></span></div>
+        <div id="status" class="status">Prêt.</div>
+        <div class="row">
+          <button id="splitBtn" type="button" class="primary">Découper le MP3</button>
+          <button id="downloadAllBtn" type="button" class="ghost" disabled>Télécharger tout</button>
+        </div>
+        <div class="info">
+          Dépose dans le dossier <code>ffmpeg/</code> les fichiers FFmpeg locaux pour GitHub Pages, puis publie l’ensemble sur le même site.
+        </div>
+      </section>
+    </section>
+
+    <section class="panel" style="margin: 0 28px 28px;">
+      <h2>Résultats</h2>
+      <div id="results" class="results"></div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { FFmpeg } from './ffmpeg/ffmpeg.esm.js';
+    import { fetchFile, toBlobURL } from './ffmpeg/util.esm.js';
+
+    const fileInput = document.getElementById('fileInput');
+    const chooseBtn = document.getElementById('chooseBtn');
+    const dropzone = document.getElementById('dropzone');
+    const splitBtn = document.getElementById('splitBtn');
+    const downloadAllBtn = document.getElementById('downloadAllBtn');
+    const resultsEl = document.getElementById('results');
+    const statusEl = document.getElementById('status');
+    const progressBar = document.getElementById('progressBar');
+    const segmentMinutesInput = document.getElementById('segmentMinutes');
+    const fileMeta = document.getElementById('fileMeta');
+
+    const ffmpeg = new FFmpeg();
+    let ffmpegLoaded = false;
+    let selectedFile = null;
+    let generatedFiles = [];
+
+    const setStatus = (message, isError = false) => {
+      statusEl.textContent = message;
+      statusEl.classList.toggle('error', isError);
+    };
+
+    const setProgress = (value) => {
+      progressBar.style.width = `${Math.max(0, Math.min(100, value))}%`;
+    };
+
+    const formatSize = (bytes) => {
+      if (bytes < 1024) return `${bytes} octets`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`;
+      return `${(bytes / (1024 * 1024)).toFixed(2)} Mo`;
+    };
+
+    function showFile(file) {
+      selectedFile = file;
+      fileMeta.style.display = 'block';
+      fileMeta.innerHTML = `<strong>${file.name}</strong><br><span class="small">Taille : ${formatSize(file.size)}</span>`;
+      setStatus('Fichier chargé.');
+    }
+
+    async function loadFFmpeg() {
+      if (ffmpegLoaded) return;
+      setStatus('Chargement de FFmpeg local...');
+      setProgress(10);
+
+      const base = './ffmpeg';
+      const coreURL = await toBlobURL(`${base}/ffmpeg-core.js`, 'text/javascript');
+      const wasmURL = await toBlobURL(`${base}/ffmpeg-core.wasm`, 'application/wasm');
+      const workerURL = await toBlobURL(`${base}/ffmpeg-core.worker.js`, 'text/javascript');
+
+      await ffmpeg.load({ coreURL, wasmURL, workerURL });
+      ffmpegLoaded = true;
+      setProgress(18);
+      setStatus('FFmpeg prêt.');
+    }
+
+    function clearResults() {
+      generatedFiles.forEach(item => URL.revokeObjectURL(item.url));
+      generatedFiles = [];
+      resultsEl.innerHTML = '';
+      downloadAllBtn.disabled = true;
+    }
+
+    function renderResults() {
+      resultsEl.innerHTML = '';
+      generatedFiles.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'result';
+        div.innerHTML = `<div><strong>${item.name}</strong><div class="small">Partie ${index + 1} · ${formatSize(item.size)}</div></div>`;
+        const a = document.createElement('a');
+        a.href = item.url;
+        a.download = item.name;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.innerHTML = '<button type="button" class="ghost">Télécharger</button>';
+        div.appendChild(a);
+        resultsEl.appendChild(div);
+      });
+      downloadAllBtn.disabled = generatedFiles.length === 0;
+    }
+
+    ffmpeg.on('progress', ({ progress }) => {
+      if (!Number.isFinite(progress)) return;
+      setProgress(18 + progress * 80);
+      setStatus(`Traitement en cours : ${Math.round(progress * 100)} %`);
+    });
+
+    chooseBtn.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files?.[0]) showFile(fileInput.files[0]);
+    });
+
+    ['dragenter', 'dragover'].forEach(evt => {
+      dropzone.addEventListener(evt, e => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(evt => {
+      dropzone.addEventListener(evt, e => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+      });
+    });
+
+    dropzone.addEventListener('drop', e => {
+      const file = e.dataTransfer.files?.[0];
+      if (file && (file.type === 'audio/mpeg' || file.name.toLowerCase().endsWith('.mp3'))) {
+        fileInput.files = e.dataTransfer.files;
+        showFile(file);
+      } else {
+        setStatus('Dépose un MP3 valide.', true);
+      }
+    });
+
+    splitBtn.addEventListener('click', async () => {
+      const file = selectedFile || fileInput.files?.[0];
+      const segmentMinutes = Number(segmentMinutesInput.value || 10);
+
+      if (!file) {
+        setStatus('Choisis un fichier MP3.', true);
+        return;
+      }
+      if (!Number.isFinite(segmentMinutes) || segmentMinutes <= 0) {
+        setStatus('Durée invalide.', true);
+        return;
+      }
+
+      splitBtn.disabled = true;
+      clearResults();
+      setProgress(4);
+
+      try {
+        await loadFFmpeg();
+
+        const inputName = 'input.mp3';
+        const outputPattern = 'part-%03d.mp3';
+        const segmentSeconds = Math.round(segmentMinutes * 60);
+
+        setStatus('Copie du fichier...');
+        await ffmpeg.writeFile(inputName, await fetchFile(file));
+        setProgress(24);
+
+        await ffmpeg.exec([
+          '-i', inputName,
+          '-f', 'segment',
+          '-segment_time', String(segmentSeconds),
+          '-c', 'copy',
+          outputPattern
+        ]);
+
+        const entries = await ffmpeg.listDir('/');
+        const partFiles = entries
+          .filter(entry => entry.isDir === false && /^part-\d{3}\.mp3$/.test(entry.name))
+          .sort((a, b) => a.name.localeCompare(b.name));
+
+        if (!partFiles.length) throw new Error('Aucun segment généré. Vérifie les fichiers FFmpeg dans ./ffmpeg/.');
+
+        for (const part of partFiles) {
+          const data = await ffmpeg.readFile(part.name);
+          const blob = new Blob([data.buffer], { type: 'audio/mpeg' });
+          generatedFiles.push({
+            name: part.name,
+            url: URL.createObjectURL(blob),
+            size: blob.size
+          });
+        }
+
+        renderResults();
+        setProgress(100);
+        setStatus(`Terminé : ${generatedFiles.length} fichier(s) généré(s).`);
+
+        await ffmpeg.deleteFile(inputName).catch(() => {});
+        for (const part of partFiles) {
+          await ffmpeg.deleteFile(part.name).catch(() => {});
+        }
+      } catch (error) {
+        console.error(error);
+        setStatus(`Erreur : ${error.message || error}`, true);
+        setProgress(0);
+      } finally {
+        splitBtn.disabled = false;
+      }
+    });
+
+    downloadAllBtn.addEventListener('click', async () => {
+      for (const item of generatedFiles) {
+        const a = document.createElement('a');
+        a.href = item.url;
+        a.download = item.name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        await new Promise(resolve => setTimeout(resolve, 250));
+      }
+    });
+  </script>
+</body>
+</html>
